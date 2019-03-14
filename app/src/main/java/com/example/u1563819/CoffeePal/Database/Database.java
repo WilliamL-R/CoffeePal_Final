@@ -1,0 +1,63 @@
+package com.example.u1563819.CoffeePal.Database;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
+
+import com.example.u1563819.CoffeePal.Model.Order;
+import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class Database extends SQLiteAssetHelper {
+    private static final String DB_NAME="CoffeePalDB.db";
+    private static final int DB_VER=1;
+    public Database(Context context){
+        super(context, DB_NAME, null, DB_VER);
+    }
+
+    public List<Order> getBasket(){
+        SQLiteDatabase db = getReadableDatabase();
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+
+        String[] sqlSelect={"ItemName","ItemId","ItemQuantity","Price"};
+        String sqlTable="OrderDetails";
+
+        qb.setTables(sqlTable);
+        Cursor c = qb.query(db,sqlSelect,null,null,null,null,null);
+
+        final List<Order> result = new ArrayList<>();
+
+        if(c!= null) {
+            if (c.moveToFirst()) {
+                do {
+                    result.add(new Order(c.getString(c.getColumnIndex("ItemID")),
+                            c.getString(c.getColumnIndex("ItemName")),
+                            c.getString(c.getColumnIndex("ItemQuantity")),
+                            c.getString(c.getColumnIndex("Price"))
+                    ));
+                } while (c.moveToNext());
+            }
+        }
+        return result;
+    }
+
+    public void addToBasket(Order order){
+        SQLiteDatabase db = getReadableDatabase();
+        String query = String.format("INSERT INTO OrderDetails(ItemID,ItemName,ItemQuantity,Price) VALUES('%s' ,'%s', '%s', '%s');",
+                order.getItemId(),
+                order.getItemName(),
+                order.getQuantity(),
+                order.getPrice());
+        db.execSQL(query);
+    }
+
+    public void deleteBasket(){
+        SQLiteDatabase db = getReadableDatabase();
+        String query = String.format("DELETE FROM OrderDetails");
+        db.execSQL(query);
+    }
+}
